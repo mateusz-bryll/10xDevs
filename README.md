@@ -9,6 +9,7 @@ An AI-assisted task management system inspired by GitHub Issues, designed to str
 - [Features](#features)
 - [Getting Started](#getting-started)
 - [Available Scripts](#available-scripts)
+- [Database Migrations](#database-migrations)
 - [Project Scope](#project-scope)
 - [Project Structure](#project-structure)
 - [Project Status](#project-status)
@@ -85,10 +86,55 @@ AI TaskFlow simplifies project setup and reduces manual task creation through in
 
 - **Node.js**: v22.19.0 (specified in `.nvmrc`)
 - **.NET SDK**: v9.0.305
-- **PostgreSQL**: Latest stable version
+- **Docker**: For running PostgreSQL and pgAdmin
 - **Auth0 Account**: For authentication setup
 
 ### Installation
+
+#### Database Setup (Docker)
+
+Start the PostgreSQL database and pgAdmin UI using Docker Compose:
+
+```bash
+# Navigate to the dev directory
+cd dev
+
+# Start the containers
+docker-compose up -d
+
+# Verify containers are running
+docker ps
+```
+
+**Database Details:**
+- **PostgreSQL**:
+  - Host: `localhost`
+  - Port: `5432`
+  - Database: `10xDev-TaskFlow`
+  - Username: `postgres`
+  - Password: `postgres`
+
+- **pgAdmin** (Web UI):
+  - URL: `http://localhost:5050`
+  - Email: `admin@admin.com`
+  - Password: `admin`
+
+**Managing the Database:**
+
+```bash
+# Stop the containers
+docker-compose down
+
+# Stop and remove all data (WARNING: This will delete all database data)
+docker-compose down -v
+
+# View logs
+docker-compose logs postgres
+docker-compose logs pgadmin
+
+# Restart containers
+docker-compose restart
+```
 
 #### Frontend Setup
 
@@ -158,6 +204,94 @@ export const environment = {
 | `dotnet run --project TaskFlow.Server` | Run the API server |
 | `dotnet test` | Run unit tests |
 
+## Database Migrations
+
+### Migration Organization
+
+AI TaskFlow uses Entity Framework Core with a **centralized migration strategy**. Migrations are stored in the main `TaskFlow.Server` project, organized by module:
+
+```
+TaskFlow.Server/
+└── Database/
+    └── WorkItemsModule/          # WorkItems module migrations
+        ├── {timestamp}_InitialCreate.cs
+        ├── {timestamp}_InitialCreate.Designer.cs
+        └── WorkItemsDatabaseContextModelSnapshot.cs
+```
+
+**Key Points:**
+- Each module has its own `DbContext` in its respective module project (e.g., `TaskFlow.Modules.WorkItems`)
+- Migration files are centralized in `TaskFlow.Server/Database/{ModuleName}/`
+- The `MigrationsAssembly` is configured to point to `TaskFlow.Server`
+
+### Creating a New Migration
+
+```bash
+# Navigate to backend directory
+cd src/backend
+
+# Create a new migration
+dotnet ef migrations add MigrationName \
+  --project TaskFlow.Modules.WorkItems \
+  --startup-project TaskFlow.Server \
+  --context WorkItemsDatabaseContext \
+  --output-dir ../../TaskFlow.Server/Database/WorkItemsModule
+```
+
+**Parameters:**
+- `--project`: The module project containing the DbContext
+- `--startup-project`: The main server project
+- `--context`: The specific DbContext to use
+- `--output-dir`: Relative path to the migrations folder (from the project directory)
+
+### Applying Migrations
+
+```bash
+# Apply all pending migrations to the database
+dotnet ef database update \
+  --project TaskFlow.Modules.WorkItems \
+  --startup-project TaskFlow.Server \
+  --context WorkItemsDatabaseContext
+```
+
+### Removing the Last Migration
+
+```bash
+# Remove the most recent migration (if not yet applied to database)
+dotnet ef migrations remove \
+  --project TaskFlow.Modules.WorkItems \
+  --startup-project TaskFlow.Server \
+  --context WorkItemsDatabaseContext
+```
+
+### Generating SQL Scripts
+
+```bash
+# Generate SQL script for all migrations
+dotnet ef migrations script \
+  --project TaskFlow.Modules.WorkItems \
+  --startup-project TaskFlow.Server \
+  --context WorkItemsDatabaseContext \
+  --output migrations.sql
+
+# Generate SQL script for specific range
+dotnet ef migrations script FromMigration ToMigration \
+  --project TaskFlow.Modules.WorkItems \
+  --startup-project TaskFlow.Server \
+  --context WorkItemsDatabaseContext \
+  --output incremental.sql
+```
+
+### Prerequisites
+
+Ensure you have the EF Core CLI tools installed:
+
+```bash
+dotnet tool install --global dotnet-ef
+# Or update existing installation
+dotnet tool update --global dotnet-ef
+```
+
 ## Project Scope
 
 ### In Scope (MVP)
@@ -184,24 +318,64 @@ export const environment = {
 ```
 10xDevs/
 ├── docs/
-│   ├── prd.md              # Product Requirements Document
-│   └── tech-stack.md       # Technology Stack Documentation
+│   ├── .ai/
+│   │   └── db-plan.md                          # Database schema documentation
+│   ├── conventions/
+│   │   ├── entity-framework.md                 # EF Core conventions
+│   │   └── semantic-ids.md                     # Strongly-typed ID conventions
+│   ├── prd.md                                  # Product Requirements Document
+│   └── tech-stack.md                           # Technology Stack Documentation
 ├── src/
 │   ├── backend/
 │   │   ├── modules/
-│   │   │   ├── TaskFlow.Modules.Assistant/    # AI integration module
-│   │   │   ├── TaskFlow.Modules.Users/        # User management module
-│   │   │   └── TaskFlow.Modules.WorkItems/    # Task management module
-│   │   ├── TaskFlow.Server/                   # Main API server
-│   │   ├── Directory.Packages.props           # Central package management
-│   │   ├── global.json                        # .NET SDK version
-│   │   └── TaskFlow.sln                       # Solution file
+│   │   │   ├── TaskFlow.Modules.Assistant/     # AI integration module
+│   │   │   ├── TaskFlow.Modules.Users/         # User management module
+│   │   │   └── TaskFlow.Modules.WorkItems/     # Task management module
+│   │   │       ├── Domain/
+│   │   │       │   ├── Entities/               # Domain entities
+│   │   │       │   ├── ValueObjects/           # Strongly-typed IDs
+│   │   │       │   ├── Enums/                  # Domain enums
+│   │   │       │   └── Validators/             # Business rule validators
+│   │   │       ├── Infrastructure/
+│   │   │       │   ├── Persistence/
+│   │   │       │   │   ├── WorkItemsDatabaseContext.cs
+│   │   │       │   │   └── Configurations/     # EF entity configurations
+│   │   │       │   └── Repositories/           # (future implementations)
+│   │   │       ├── Application/
+│   │   │       │   ├── Commands/               # CQRS commands
+│   │   │       │   ├── Queries/                # CQRS queries
+│   │   │       │   └── DTOs/                   # Data transfer objects
+│   │   │       └── Api/
+│   │   │           └── Endpoints/              # Minimal API endpoints
+│   │   ├── TaskFlow.Server/                    # Main API server
+│   │   │   ├── Database/
+│   │   │   │   └── WorkItemsModule/            # EF Core migrations
+│   │   │   ├── Program.cs
+│   │   │   └── appsettings.json
+│   │   ├── Directory.Packages.props            # Central package management
+│   │   ├── global.json                         # .NET SDK version
+│   │   └── TaskFlow.sln                        # Solution file
 │   └── frontend/
-│       ├── src/                               # Angular application source
-│       ├── .nvmrc                             # Node version specification
-│       └── package.json                       # NPM dependencies
+│       ├── src/                                # Angular application source
+│       ├── .nvmrc                              # Node version specification
+│       └── package.json                        # NPM dependencies
 └── README.md
 ```
+
+### Architecture Overview
+
+**Modular Monolith Pattern:**
+- Each module (`Assistant`, `Users`, `WorkItems`) is independently structured
+- Modules follow **Clean Architecture** principles with clear layer separation:
+  - **Domain**: Business logic, entities, value objects (no external dependencies)
+  - **Infrastructure**: EF Core, repositories, external service integrations
+  - **Application**: Use cases, command/query handlers, DTOs
+  - **API**: HTTP endpoints, request/response mapping
+
+**Database Migrations:**
+- Centralized in `TaskFlow.Server/Database/{ModuleName}/`
+- Each module's `DbContext` references `TaskFlow.Server` as the migrations assembly
+- Allows independent module development while maintaining organized migration history
 
 ## Project Status
 
