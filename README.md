@@ -82,12 +82,37 @@ AI TaskFlow simplifies project setup and reduces manual task creation through in
 
 ## Getting Started
 
+### Quick Start
+
+To get the backend up and running quickly:
+
+```bash
+# 1. Start PostgreSQL and pgAdmin containers
+cd dev
+docker-compose up -d
+
+# 2. Navigate to backend and restore packages
+cd ../src/backend
+dotnet restore
+
+# 3. Apply database migrations
+dotnet ef database update \
+  --project TaskFlow.Modules.WorkItems \
+  --startup-project TaskFlow.Server \
+  --context WorkItemsDatabaseContext
+
+# 4. Run the backend server
+dotnet run --project TaskFlow.Server
+```
+
+The backend will be available at `http://localhost:5000` and pgAdmin at `http://localhost:5050`.
+
 ### Prerequisites
 
-- **Node.js**: v22.19.0 (specified in `.nvmrc`)
-- **.NET SDK**: v9.0.305
+- **Node.js**: v22.19.0 (specified in `src/frontend/.nvmrc`)
+- **.NET SDK**: v9.0.305 (specified in `src/backend/global.json`)
 - **Docker**: For running PostgreSQL and pgAdmin
-- **Auth0 Account**: For authentication setup
+- **Auth0 Account**: For authentication setup (future implementation)
 
 ### Installation
 
@@ -150,10 +175,24 @@ The Angular application will run on `http://localhost:4200`
 
 ```bash
 cd src/backend
+
+# Restore NuGet packages
 dotnet restore
+
+# Build the solution
 dotnet build
+
+# Apply database migrations (ensure Docker containers are running first)
+dotnet ef database update \
+  --project TaskFlow.Modules.WorkItems \
+  --startup-project TaskFlow.Server \
+  --context WorkItemsDatabaseContext
+
+# Run the API server
 dotnet run --project TaskFlow.Server
 ```
+
+**Note**: The backend currently serves a basic "Hello World!" endpoint at `http://localhost:5000`. API endpoints for work items management are planned for the next development phase.
 
 ### Configuration
 
@@ -170,20 +209,25 @@ export const environment = {
 ```
 
 **Backend (`src/backend/TaskFlow.Server/appsettings.Development.json`)**:
+
+The backend is pre-configured to connect to the local PostgreSQL Docker container:
+
 ```json
 {
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore.Database.Command": "Information"
+    }
+  },
   "ConnectionStrings": {
-    "DefaultConnection": "YOUR_POSTGRESQL_CONNECTION_STRING"
-  },
-  "Auth0": {
-    "Domain": "YOUR_AUTH0_DOMAIN",
-    "Audience": "YOUR_AUTH0_AUDIENCE"
-  },
-  "OpenAI": {
-    "ApiKey": "YOUR_OPENAI_API_KEY"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=10xDev-TaskFlow;Username=postgres;Password=postgres"
   }
 }
 ```
+
+**Note**: Auth0 and OpenAI configurations will be added in future iterations when those features are implemented.
 
 ## Available Scripts
 
@@ -203,6 +247,65 @@ export const environment = {
 | `dotnet build` | Build the solution |
 | `dotnet run --project TaskFlow.Server` | Run the API server |
 | `dotnet test` | Run unit tests |
+
+## Domain Model
+
+The WorkItems module implements a **strongly-typed domain model** following Domain-Driven Design principles:
+
+### Entities
+
+**Project** (`TaskFlow.Modules.WorkItems.Domain.Entities.Project`)
+- Represents a container for work items
+- Properties:
+  - `Id` (ProjectId) - Strongly-typed identifier
+  - `Name` (string) - Project name
+  - `Description` (string?) - Optional description
+  - `OwnerId` (string) - User who owns the project
+  - `CreatedAt` / `UpdatedAt` (DateTimeOffset) - Timestamps
+  - `WorkItems` - Collection of related work items
+
+**WorkItem** (`TaskFlow.Modules.WorkItems.Domain.Entities.WorkItem`)
+- Represents a task unit (Epic, Story, or Task)
+- Properties:
+  - `Id` (WorkItemId) - Strongly-typed identifier
+  - `ProjectId` (ProjectId) - Reference to parent project
+  - `ParentId` (WorkItemId?) - Optional parent work item (for hierarchy)
+  - `WorkItemType` (enum) - Epic | Story | Task
+  - `Title` (string) - Work item title
+  - `Description` (string?) - Optional description
+  - `Status` (enum) - New | Active | Resolved | Closed | Removed
+  - `AssignedUserId` (string?) - Optional assigned user
+  - `CreatedAt` / `UpdatedAt` (DateTimeOffset) - Timestamps
+  - `Parent` / `Children` - Navigation properties for hierarchy
+
+### Value Objects
+
+**Strongly-Typed IDs** (using `StronglyTypedId` library):
+- `ProjectId` - Ensures type safety for project identifiers
+- `WorkItemId` - Ensures type safety for work item identifiers
+- Both backed by `Guid` values
+
+### Enums
+
+**WorkItemType**
+- `Epic` (0) - Top-level work item
+- `Story` (1) - Mid-level work item (child of Epic)
+- `Task` (2) - Leaf-level work item (child of Story)
+
+**WorkItemStatus**
+- `New` (0) - Newly created
+- `Active` (1) - In progress
+- `Resolved` (2) - Completed
+- `Closed` (3) - Archived
+- `Removed` (4) - Soft deleted
+
+### Database Schema
+
+The EF Core configurations enforce:
+- **Cascade deletion**: Deleting a project removes all work items
+- **Self-referential hierarchy**: Work items can have parent-child relationships
+- **Indexes**: Optimized queries on ProjectId, ParentId, Status, and AssignedUserId
+- **Constraints**: Required fields, max lengths (Title: 500 chars, Name: 200 chars)
 
 ## Database Migrations
 
@@ -291,6 +394,8 @@ dotnet tool install --global dotnet-ef
 # Or update existing installation
 dotnet tool update --global dotnet-ef
 ```
+
+**Current version used**: .NET EF Core CLI 9.x (compatible with .NET 9.0.305)
 
 ## Project Scope
 
