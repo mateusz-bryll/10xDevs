@@ -11,10 +11,11 @@ Backend - .NET Core:
 - Allows deployment in Docker environment
 - Is a popular solution that can be easily run locally or on a server
 
-Database - PostgreSQL:
+Database - PostgreSQL & Redis:
 - Stable SQL database
 - Has an adapter for Entity Framework Core
 - Handles millions of records
+- Redis for in-memory cache for Auth0 user information
 
 Authentication and Authorization - Auth0:
 - Has libraries for integration with .NET and Angular applications

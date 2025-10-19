@@ -41,6 +41,7 @@ AI TaskFlow simplifies project setup and reduces manual task creation through in
 - **C#** - Primary programming language
 - **Entity Framework Core** - ORM for database access
 - **PostgreSQL** - Relational database
+- **Redis** - In-memory cache for Auth0 user information
 - **Semantic Kernel** - AI model integration (OpenAI)
 
 ### DevOps & Infrastructure
@@ -87,7 +88,7 @@ AI TaskFlow simplifies project setup and reduces manual task creation through in
 To get the backend up and running quickly:
 
 ```bash
-# 1. Start PostgreSQL and pgAdmin containers
+# 1. Start PostgreSQL, Redis, and management UIs
 cd dev
 docker-compose up -d
 
@@ -105,7 +106,7 @@ dotnet ef database update \
 dotnet run --project TaskFlow.Server
 ```
 
-The backend will be available at `http://localhost:5000` and pgAdmin at `http://localhost:5050`.
+The backend will be available at `http://localhost:5000`, pgAdmin at `http://localhost:5050`, and RedisInsight at `http://localhost:5540`.
 
 ### Prerequisites
 
@@ -144,18 +145,29 @@ docker ps
   - Email: `admin@admin.com`
   - Password: `admin`
 
-**Managing the Database:**
+- **Redis**:
+  - Host: `localhost`
+  - Port: `6379`
+  - Purpose: Caching Auth0 user information
+
+- **RedisInsight** (Web UI):
+  - URL: `http://localhost:5540`
+  - Purpose: Redis database management and monitoring
+
+**Managing the Containers:**
 
 ```bash
 # Stop the containers
 docker-compose down
 
-# Stop and remove all data (WARNING: This will delete all database data)
+# Stop and remove all data (WARNING: This will delete all database and cache data)
 docker-compose down -v
 
 # View logs
 docker-compose logs postgres
 docker-compose logs pgadmin
+docker-compose logs redis
+docker-compose logs redisinsight
 
 # Restart containers
 docker-compose restart
@@ -210,7 +222,7 @@ export const environment = {
 
 **Backend (`src/backend/TaskFlow.Server/appsettings.Development.json`)**:
 
-The backend is pre-configured to connect to the local PostgreSQL Docker container:
+The backend is pre-configured to connect to the local PostgreSQL and Redis Docker containers:
 
 ```json
 {
@@ -222,7 +234,8 @@ The backend is pre-configured to connect to the local PostgreSQL Docker containe
     }
   },
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=10xDev-TaskFlow;Username=postgres;Password=postgres"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=10xDev-TaskFlow;Username=postgres;Password=postgres",
+    "Redis": "localhost:6379"
   }
 }
 ```
