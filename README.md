@@ -86,10 +86,55 @@ AI TaskFlow simplifies project setup and reduces manual task creation through in
 
 - **Node.js**: v22.19.0 (specified in `.nvmrc`)
 - **.NET SDK**: v9.0.305
-- **PostgreSQL**: Latest stable version
+- **Docker**: For running PostgreSQL and pgAdmin
 - **Auth0 Account**: For authentication setup
 
 ### Installation
+
+#### Database Setup (Docker)
+
+Start the PostgreSQL database and pgAdmin UI using Docker Compose:
+
+```bash
+# Navigate to the dev directory
+cd dev
+
+# Start the containers
+docker-compose up -d
+
+# Verify containers are running
+docker ps
+```
+
+**Database Details:**
+- **PostgreSQL**:
+  - Host: `localhost`
+  - Port: `5432`
+  - Database: `10xDev-TaskFlow`
+  - Username: `postgres`
+  - Password: `postgres`
+
+- **pgAdmin** (Web UI):
+  - URL: `http://localhost:5050`
+  - Email: `admin@admin.com`
+  - Password: `admin`
+
+**Managing the Database:**
+
+```bash
+# Stop the containers
+docker-compose down
+
+# Stop and remove all data (WARNING: This will delete all database data)
+docker-compose down -v
+
+# View logs
+docker-compose logs postgres
+docker-compose logs pgadmin
+
+# Restart containers
+docker-compose restart
+```
 
 #### Frontend Setup
 
