@@ -5,5 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.10" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageVersion Include="StronglyTypedId" Version="1.0.0-beta08" />
   </ItemGroup>
 </Project>
