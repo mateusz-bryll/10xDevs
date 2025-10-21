@@ -11,7 +11,6 @@ builder.Services.AddDbContext<WorkItemsDatabaseContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         npgsql => npgsql.MigrationsAssembly("TaskFlow.Server")
     )
-    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
 );
 
 builder.Services.AddUsersModule(builder.Configuration);
