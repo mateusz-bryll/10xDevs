@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using TaskFlow.Modules.Users;
 using TaskFlow.Modules.WorkItems.Domain.ValueObjects;
 
@@ -8,6 +7,7 @@ namespace TaskFlow.Modules.WorkItems.Application.Requests;
 /// Request payload for creating a new work item.
 /// Maps to: Domain.Entities.WorkItem constructor parameters
 /// Used in: POST /api/projects/{projectId}/work-items
+/// Validation: CreateWorkItemRequestValidator (FluentValidation)
 ///
 /// Hierarchy Rules (enforced via validation):
 /// - Epic: ParentId must be null
@@ -27,20 +27,16 @@ public sealed record CreateWorkItemRequest
     /// <summary>
     /// The work item type: "Epic", "Story", or "Task" (required, case-insensitive).
     /// </summary>
-    [Required(ErrorMessage = "Work item type is required.")]
-    public required string WorkItemType { get; init; }
+    public string? WorkItemType { get; init; }
 
     /// <summary>
     /// The work item title (required, max 200 characters).
     /// </summary>
-    [Required(ErrorMessage = "Work item title is required.")]
-    [MaxLength(200, ErrorMessage = "Work item title cannot exceed 200 characters.")]
-    public required string Title { get; init; }
+    public string? Title { get; init; }
 
     /// <summary>
     /// Optional work item description (max 5000 characters).
     /// </summary>
-    [MaxLength(5000, ErrorMessage = "Work item description cannot exceed 5000 characters.")]
     public string? Description { get; init; }
 
     /// <summary>

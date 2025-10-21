@@ -65,20 +65,20 @@ public static class Endpoints
     /// Retrieves paginated list of projects owned by the authenticated user.
     /// </summary>
     private static async Task<IResult> ListUserProjects(
-        [FromQuery] int page,
-        [FromQuery] int pageSize,
         [FromServices] IProjectsService projectsService,
         [FromServices] ICurrentUserAccessor currentUserAccessor,
-        CancellationToken cancellationToken)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
         // Get current authenticated user
         var currentUser = currentUserAccessor.GetCurrentUser();
 
-        // List projects (service handles pagination defaults and validation)
+        // List projects (service handles pagination validation)
         var response = await projectsService.ListProjectsAsync(
             currentUser.Id,
-            page > 0 ? page : 1,
-            pageSize > 0 ? pageSize : 20,
+            page,
+            pageSize,
             cancellationToken);
 
         return Results.Ok(response);
