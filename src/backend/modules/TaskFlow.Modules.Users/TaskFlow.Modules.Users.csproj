@@ -6,4 +6,14 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Auth0.AuthenticationApi" />
+      <PackageReference Include="Auth0.ManagementApi" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+      <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+      <PackageReference Include="StronglyTypedId" />
+      <PackageReference Include="StronglyTypedId.Templates" />
+    </ItemGroup>
+
 </Project>
