@@ -10,6 +10,7 @@ Backend - .NET Core:
 - Has well-tested libraries for building applications
 - Allows deployment in Docker environment
 - Is a popular solution that can be easily run locally or on a server
+- FluentValidation for validation
 
 Database - PostgreSQL & Redis:
 - Stable SQL database

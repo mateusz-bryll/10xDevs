@@ -7,6 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="FluentValidation" />
+      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
       <PackageReference Include="StronglyTypedId" />
       <PackageReference Include="StronglyTypedId.Templates" />
