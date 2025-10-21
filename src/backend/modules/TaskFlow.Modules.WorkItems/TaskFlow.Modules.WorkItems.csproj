@@ -12,4 +12,8 @@
       <PackageReference Include="StronglyTypedId.Templates" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\TaskFlow.Modules.Users\TaskFlow.Modules.Users.csproj" />
+    </ItemGroup>
+
 </Project>

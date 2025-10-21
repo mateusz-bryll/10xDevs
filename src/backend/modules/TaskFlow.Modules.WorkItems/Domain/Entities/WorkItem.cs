@@ -1,3 +1,4 @@
+using TaskFlow.Modules.Users;
 using TaskFlow.Modules.WorkItems.Domain.Enums;
 using TaskFlow.Modules.WorkItems.Domain.ValueObjects;
 
@@ -12,7 +13,7 @@ public sealed class WorkItem
     public string Title { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public WorkItemStatus Status { get; private set; }
-    public string? AssignedUserId { get; private set; }
+    public UserId? AssignedUserId { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -30,7 +31,7 @@ public sealed class WorkItem
         WorkItemType workItemType,
         string title,
         string? description,
-        string? assignedUserId)
+        UserId? assignedUserId)
     {
         Id = id;
         ProjectId = projectId;
@@ -50,7 +51,7 @@ public sealed class WorkItem
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
-    public void Assign(string userId)
+    public void Assign(UserId userId)
     {
         AssignedUserId = userId;
         UpdatedAt = DateTimeOffset.UtcNow;

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TaskFlow.Modules.Users;
 using TaskFlow.Modules.WorkItems.Domain.Entities;
 using TaskFlow.Modules.WorkItems.Domain.ValueObjects;
 
@@ -27,6 +28,7 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
 
         b.Property(x => x.OwnerId)
             .IsRequired()
+            .HasConversion(new UserId.EfCoreValueConverter())
             .HasMaxLength(256);
 
         b.Property(x => x.CreatedAt)
